@@ -1,0 +1,229 @@
+https://developer.riotgames.com/api-methods/#match-v4
+
+
+MatchDto 
+NAME	DATA TYPE	DESCRIPTION
+seasonId	int	Please refer to the Game Constants documentation.
+queueId	int	Please refer to the Game Constants documentation.
+gameId	long	
+participantIdentities	List[ParticipantIdentityDto]	Participant identity information.
+gameVersion	string	The major.minor version typically indicates the patch the match was played on.
+platformId	string	Platform where the match was played.
+gameMode	string	Please refer to the Game Constants documentation.
+mapId	int	Please refer to the Game Constants documentation.
+gameType	string	Please refer to the Game Constants documentation.
+teams	List[TeamStatsDto]	Team information.
+participants	List[ParticipantDto]	Participant information.
+gameDuration	long	Match duration in seconds.
+gameCreation	long	Designates the timestamp when champion select ended and the loading screen appeared, NOT when the game timer was at 0:00.
+
+
+ParticipantIdentityDto 
+NAME	DATA TYPE	DESCRIPTION
+player	PlayerDto	Player information.
+participantId	int
+
+
+PlayerDto 
+NAME	DATA TYPE	DESCRIPTION
+currentPlatformId	string	
+summonerName	string	
+matchHistoryUri	string	
+platformId	string	Original platformId.
+currentAccountId	string	Player's current accountId (Encrypted)
+profileIcon	int	
+summonerId	string	Player's summonerId (Encrypted)
+accountId	string	Player's original accountId (Encrypted)
+
+
+TeamStatsDto 
+NAME	DATA TYPE	DESCRIPTION
+firstDragon	boolean	Flag indicating whether or not the team scored the first Dragon kill.
+firstInhibitor	boolean	Flag indicating whether or not the team destroyed the first inhibitor.
+bans	List[TeamBansDto]	If match queueId has a draft, contains banned champion data, otherwise empty.
+baronKills	int	Number of times the team killed Baron.
+firstRiftHerald	boolean	Flag indicating whether or not the team scored the first Rift Herald kill.
+firstBaron	boolean	Flag indicating whether or not the team scored the first Baron kill.
+riftHeraldKills	int	Number of times the team killed Rift Herald.
+firstBlood	boolean	Flag indicating whether or not the team scored the first blood.
+teamId	int	100 for blue side. 200 for red side.
+firstTower	boolean	Flag indicating whether or not the team destroyed the first tower.
+vilemawKills	int	Number of times the team killed Vilemaw.
+inhibitorKills	int	Number of inhibitors the team destroyed.
+towerKills	int	Number of towers the team destroyed.
+dominionVictoryScore	int	For Dominion matches, specifies the points the team had at game end.
+win	string	String indicating whether or not the team won. There are only two values visibile in public match history. (Legal values: Fail, Win)
+dragonKills	int	Number of times the team killed Dragon.
+
+
+TeamBansDto 
+NAME	DATA TYPE	DESCRIPTION
+pickTurn	int	Turn during which the champion was banned.
+championId
+
+
+ParticipantDto 
+NAME	DATA TYPE	DESCRIPTION
+stats	ParticipantStatsDto	Participant statistics.
+participantId	int	
+runes	List[RuneDto]	List of legacy Rune information. Not included for matches played with Runes Reforged.
+timeline	ParticipantTimelineDto	Participant timeline data.
+teamId	int	100 for blue side. 200 for red side.
+spell2Id	int	Second Summoner Spell id.
+masteries	List[MasteryDto]	List of legacy Mastery information. Not included for matches played with Runes Reforged.
+highestAchievedSeasonTier	string	Highest ranked tier achieved for the previous season in a specific subset of queueIds, if any, otherwise null. Used to display border in game loading screen. Please refer to the Ranked Info documentation. (Legal values: CHALLENGER, MASTER, DIAMOND, PLATINUM, GOLD, SILVER, BRONZE, UNRANKED)
+spell1Id	int	First Summoner Spell id.
+championId	int
+
+
+ParticipantStatsDto 
+NAME	DATA TYPE	DESCRIPTION
+firstBloodAssist	boolean	
+visionScore	long	
+magicDamageDealtToChampions	long	
+damageDealtToObjectives	long	
+totalTimeCrowdControlDealt	int	
+longestTimeSpentLiving	int	
+perk1Var1	int	Post game rune stats.
+perk1Var3	int	Post game rune stats.
+perk1Var2	int	Post game rune stats.
+tripleKills	int	
+perk3Var3	int	Post game rune stats.
+nodeNeutralizeAssist	int	
+perk3Var2	int	Post game rune stats.
+playerScore9	int	
+playerScore8	int	
+kills	int	
+playerScore1	int	
+playerScore0	int	
+playerScore3	int	
+playerScore2	int	
+playerScore5	int	
+playerScore4	int	
+playerScore7	int	
+playerScore6	int	
+perk5Var1	int	Post game rune stats.
+perk5Var3	int	Post game rune stats.
+perk5Var2	int	Post game rune stats.
+totalScoreRank	int	
+neutralMinionsKilled	int	
+damageDealtToTurrets	long	
+physicalDamageDealtToChampions	long	
+nodeCapture	int	
+largestMultiKill	int	
+perk2Var2	int	Post game rune stats.
+perk2Var3	int	Post game rune stats.
+totalUnitsHealed	int	
+perk2Var1	int	Post game rune stats.
+perk4Var1	int	Post game rune stats.
+perk4Var2	int	Post game rune stats.
+perk4Var3	int	Post game rune stats.
+wardsKilled	int	
+largestCriticalStrike	int	
+largestKillingSpree	int	
+quadraKills	int	
+teamObjective	int	
+magicDamageDealt	long	
+item2	int	
+item3	int	
+item0	int	
+neutralMinionsKilledTeamJungle	int	
+item6	int	
+item4	int	
+item5	int	
+perk1	int	Primary path rune.
+perk0	int	Primary path keystone rune.
+perk3	int	Primary path rune.
+perk2	int	Primary path rune.
+perk5	int	Secondary path rune.
+perk4	int	Secondary path rune.
+perk3Var1	int	Post game rune stats.
+damageSelfMitigated	long	
+magicalDamageTaken	long	
+firstInhibitorKill	boolean	
+trueDamageTaken	long	
+nodeNeutralize	int	
+assists	int	
+combatPlayerScore	int	
+perkPrimaryStyle	int	Primary rune path
+goldSpent	int	
+trueDamageDealt	long	
+participantId	int	
+totalDamageTaken	long	
+physicalDamageDealt	long	
+sightWardsBoughtInGame	int	
+totalDamageDealtToChampions	long	
+physicalDamageTaken	long	
+totalPlayerScore	int	
+win	boolean	
+objectivePlayerScore	int	
+totalDamageDealt	long	
+item1	int	
+neutralMinionsKilledEnemyJungle	int	
+deaths	int	
+wardsPlaced	int	
+perkSubStyle	int	Secondary rune path
+turretKills	int	
+firstBloodKill	boolean	
+trueDamageDealtToChampions	long	
+goldEarned	int	
+killingSprees	int	
+unrealKills	int	
+altarsCaptured	int	
+firstTowerAssist	boolean	
+firstTowerKill	boolean	
+champLevel	int	
+doubleKills	int	
+nodeCaptureAssist	int	
+inhibitorKills	int	
+firstInhibitorAssist	boolean	
+perk0Var1	int	Post game rune stats.
+perk0Var2	int	Post game rune stats.
+perk0Var3	int	Post game rune stats.
+visionWardsBoughtInGame	int	
+altarsNeutralized	int	
+pentaKills	int	
+totalHeal	long	
+totalMinionsKilled	int	
+timeCCingOthers	long
+
+
+RuneDto 
+NAME	DATA TYPE	DESCRIPTION
+runeId	int	
+rank	int
+
+
+ParticipantTimelineDto 
+NAME	DATA TYPE	DESCRIPTION
+lane	string	Participant's calculated lane. MID and BOT are legacy values. (Legal values: MID, MIDDLE, TOP, JUNGLE, BOT, BOTTOM)
+participantId	int	
+csDiffPerMinDeltas	Map[String, double]	Creep score difference versus the calculated lane opponent(s) for a specified period.
+goldPerMinDeltas	Map[String, double]	Gold for a specified period.
+xpDiffPerMinDeltas	Map[String, double]	Experience difference versus the calculated lane opponent(s) for a specified period.
+creepsPerMinDeltas	Map[String, double]	Creeps for a specified period.
+xpPerMinDeltas	Map[String, double]	Experience change for a specified period.
+role	string	Participant's calculated role. (Legal values: DUO, NONE, SOLO, DUO_CARRY, DUO_SUPPORT)
+damageTakenDiffPerMinDeltas	Map[String, double]	Damage taken difference versus the calculated lane opponent(s) for a specified period.
+damageTakenPerMinDeltas	Map[String, double]	Damage taken for a specified period.
+
+
+MasteryDto 
+NAME	DATA TYPE	DESCRIPTION
+masteryId	int	
+rank	int
+
+
+RESPONSE ERRORS
+HTTP STATUS CODE	REASON
+400	Bad request
+401	Unauthorized
+403	Forbidden
+404	Data not found
+405	Method not allowed
+415	Unsupported media type
+429	Rate limit exceeded
+500	Internal server error
+502	Bad gateway
+503	Service unavailable
+504	Gateway timeout

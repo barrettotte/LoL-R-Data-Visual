@@ -1,1 +1,0 @@
-print("Why is the Riot Games API under maintenance tonight? :,) ")

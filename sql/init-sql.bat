@@ -1,0 +1,3 @@
+@ECHO OFF
+sqlcmd -E -S BARRETT-MAIN\BARRETTSQL -i .\init.sql
+PAUSE

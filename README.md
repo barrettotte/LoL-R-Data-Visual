@@ -1,20 +1,16 @@
 # LoL-R-Data-Visual
 
+
 Use the Riot Games API to visualize League of Legends user's stats; An introduction to data visualization and R
 
+
 ## R Packages
+Run ```init.R``` to install dependencies
 * ggplot2
-* RODBC
+* odbc
 * dplyr
 * tidyr
 * plotly
-
-
-## Questions
-* TBD
-
-
-## Answers
 
 
 ## Goals
@@ -35,7 +31,17 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 - [ ] Port Rmarkdown to a Jupyter Notebook
 
 
+## Constants
+* Season 2019 = Season id 13
+* Version 9.6.1
+
+
 ## Sources
-* https://developer.riotgames.com/
 * https://www.programmableweb.com/news/how-to-access-any-restful-api-using-r-language/how-to/2017/07/21
+* https://db.rstudio.com/getting-started/connect-to-database/
 * https://bookdown.org/yihui/rmarkdown/notebook.html
+* League of Legends
+  * https://developer.riotgames.com/api-methods/
+  * https://developer.riotgames.com/
+  * Items https://ddragon.leagueoflegends.com/cdn/9.6.1/data/en_US/item.json
+  * Champions https://ddragon.leagueoflegends.com/cdn/9.6.1/data/en_US/champion.json
