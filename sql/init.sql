@@ -9,3 +9,5 @@ BEGIN
     ELSE
         PRINT N'RIOT_API database already exists.'
 END
+
+-- NOTE: Cache Table is made within ../wrangler.R --
