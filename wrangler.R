@@ -1,7 +1,9 @@
-# Data caching, exporting, wrangling, and cleaning
+# Data caching and wrangling
+# Warning: Requests rate = 1.2 requests/second
 
 
-packages <- c("dplyr", "odbc", "jsonlite", "httr", "lubridate")
+##### Install and activate packages #####
+packages <- c("dplyr", "DBI", "odbc", "jsonlite", "httr", "lubridate", "plyr", "data.table")
 if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
   install.packages(setdiff(packages, rownames(installed.packages())))
 }
@@ -9,81 +11,103 @@ invisible(lapply(packages, function(p){
   suppressMessages(require(p, character.only=TRUE, quietly=TRUE, warn.conflicts=FALSE))
 }))
 
+
+get_matchlist <- function(url, path, headers, begin, end){
+  resp <- GET(url=url, path=path, do.call(add_headers, headers), query=list(beginIndex=begin, endIndex=end))
+  Sys.sleep(1.2)
+  print(paste("HTTP Status_Code", resp$status_code, "; Matchlist ", begin, ":", end))
+  return(resp)
+}
+
+
+get_match <- function(url, path, headers, id, iter){
+  resp <- GET(url=base.url, path=paste(path, id, sep=''), do.call(add_headers, headers))
+  print(paste("HTTP Status_Code", resp$status_code, "; Match", iter, "-", id))
+  Sys.sleep(1.2)
+  return(resp)
+}
+
+
 time.start <- Sys.time()
-base.url <- "https://na1.api.riotgames.com"
 config.path <- file.path(getwd(), "config.json")
+base.url <- "https://na1.api.riotgames.com"
+endpoints <- matrix(c("/lol/summoner/v4/summoners/by-name/", "/lol/match/v4/matchlists/by-account/", "/lol/match/v4/matches/"))
+colnames(endpoints) <- c("path")
+rownames(endpoints) <- c("summoner", "matchlist", "match")
 
-# TODO Turn endpoints into single row matrix                    #
-endpoint.summoner <- "/lol/summoner/v4/summoners/by-name/"
-endpoint.matchlist <- "/lol/match/v4/matchlists/by-account/"
-endpoint.match <- "/lol/match/v4/matches/"
-# ------------------------------------------------------------- #
-
-config.data <- tryCatch(
-  { 
-    read_json(path=config.path) 
-  }, 
-  error = function(e){ 
-    print(paste("Error opening", config.path)) 
-  }
-)
-
+config.data <- read_json(path=config.path) 
 headers <- list(config.data$`api-key`)
 names(headers) <- "X-Riot-Token"
-
 summoners.usernames <- unlist(config.data$summoners, use.names=FALSE)
-summoners.matrix <- matrix(0, nrow=length(summoners.usernames), ncol=0)
-
-
-##### Initialize database connection and setup table #####
-db.con <- DBI::dbConnect(
-  odbc::odbc(),
-  Driver = "ODBC Driver 13 for SQL Server", # sort(unique(odbcListDrivers()[[1]])) # List Drivers
-  Server = config.data$`db-server`,
-  Database = config.data$`db-name`,
-  UID = config.data$`db-user`,
-  PWD = rstudioapi::askForPassword(paste("Password for user[", config.data$`db-user`, "]")),
-  Port = config.data$`db-port`
-)
-
-db.result <- tryCatch(
-  { 
-    dbSendQuery(db.con, paste("CREATE TABLE", config.data$`db-table`, "(
-        id BIGINT IDENTITY(1,1) PRIMARY KEY,
-        lane VARCHAR(30) NOT NULL,
-        champion INT NOT NULL,
-        platform_id VARCHAR(30) NOT NULL,
-        timestamp BIGINT NOT NULL,
-        queue int NOT NULL,
-        role VARCHAR(30) NOT NULL,
-        season int NOT NULL,
-        match_details NVARCHAR(MAX)
-    )"))
-  }, 
-  error = function(e){
-    print(paste("Error creating", config.data$`db-table`, " - It may already exist."))
-  }
-)
+m.summoners <- matrix(NA, nrow=length(summoners.usernames), ncol=0)
+m.matchlist <- matrix(NA, 0, 0)
 
 
 ##### Build account details matrix #####
 for(i in 1:length(summoners.usernames)){
-  s <- summoners.usernames[i]
-  resp <- GET(url=base.url, path=paste(endpoint.summoner, s, sep=''), do.call(add_headers, headers))
-  print(paste("HTTP Status_Code", resp$status_code, "-", s))
+  s <- gsub(" ", "", summoners.usernames[i])
+  resp <- GET(url=base.url, path=paste(endpoints["summoner",], s, sep=''), do.call(add_headers, headers))
+  Sys.sleep(1.2)
+  print(paste("HTTP Status_Code", resp$status_code, ";", "Summoner =", s))
   
   if(resp$status_code == 200){
-    data <- t(do.call(rbind, content(resp)))
-    summoners.matrix <- if(length(colnames(summoners.matrix)) == 0) data else rbind(summoners.matrix, as.vector(data))
+    data.summoner <- t(do.call(rbind, content(resp)))
+    data.accountId <- data.summoner[,"accountId"]
+    matchlist.url <- paste(endpoints["matchlist",], data.accountId, sep='')
+    matches.total <- head(content(get_matchlist(base.url, matchlist.url, headers, "", "")))$`totalGames`
+        
+    if(matches.total > 100){
+      resp <- get_matchlist(base.url, matchlist.url, headers, 100, 125)
+      matches.total <- head(content(resp))$`totalGames`
+      print(paste("Found", matches.total, "match(es)"))
+      data.summoner <- cbind(data.summoner, matches.total)
+      colnames(data.summoner)[(length(colnames(data.summoner)))] <- "matches"
+      
+      for(j in 0:(((matches.total - matches.total %% 100)/100)-1)){
+        resp <- get_matchlist(base.url, matchlist.url, headers, j*100, (j+1)*100)
+        data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])
+        colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "summoner"
+      }
+    } 
+    else{
+      print(paste("Found", matches.total, "match(es)"))
+      data.summoner <- cbind(data.summoner, matches.total)
+      colnames(data.summoner)[(length(colnames(data.summoner)))] <- "matches"
+    }
+    resp <- get_matchlist(base.url, matchlist.url, headers, matches.total - matches.total %% 100, matches.total)
+    
+    data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])
+    colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "summoner"
+    
+    for(m in 1:matches.total){
+      resp <- get_match(base.url, endpoints["match",], headers, unlist(data.matchlist[,"gameId"][m], use.names=FALSE), m)
+      match <- fromJSON(rawToChar(resp$content))
+      match.stats <- toJSON(subset(match$participants, participantId == rownames(
+        subset(match$participantId$player, summonerName == summoners.usernames[i])))
+      )
+      if("stats" %in% colnames(data.matchlist)){
+        data.matchlist[m,"stats"] <- match.stats 
+      } else{
+        data.matchlist <- cbind(data.matchlist, match.stats)
+        colnames(data.matchlist)[(length(colnames(data.matchlist)))]  <- "stats"
+      }
+      if("duration" %in% colnames(data.matchlist)){
+        data.matchlist[m,"duration"] <- match$gameDuration
+      } else{
+        data.matchlist <- cbind(data.matchlist, match$gameDuration)
+        colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "duration"
+      }
+    }
+    m.matchlist <- if(length(colnames(m.matchlist)) == 0) data.matchlist else rbind(m.matchlist, as.vector(data.matchlist))
+    m.summoners <- if(length(colnames(m.summoners)) == 0) data.summoner else rbind(m.summoners, as.vector(data.summoner))
   }
-  Sys.sleep(1.3)
+  cat("\n")
 }
 
+m.matchlist <- as.data.frame(m.matchlist)
+write.csv(apply(m.matchlist, 2, as.character), file="./Matches.csv", row.names=FALSE)
 
-print(summoners.matrix)
-
-
-time.end <- Sys.time()
-print(paste("Execution Time:", round(time.end - time.start, 3), "second(s)"))
+print("Execution Time:")
+print(Sys.time() - time.start)
 
 

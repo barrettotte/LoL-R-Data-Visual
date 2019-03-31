@@ -4,22 +4,61 @@
 Use the Riot Games API to visualize League of Legends user's stats; An introduction to data visualization and R
 
 
-## R Packages
-Run ```init.R``` to install dependencies
-* ggplot2
-* odbc
-* dplyr
-* tidyr
-* plotly
+## Process
+* Create ```config.json``` to define Riot API key and specify summoners to gather data for
+* Run ```wrangler.R``` to gather all data and output to ```./Matches.csv```
+* Open SSMS > Database > Tasks > Import Flat File (Matches.csv) > Create new table ```dbo.Matches```
+
+
+## Config
+```JSON
+{
+  "api-key": "RIOT_API",
+  "summoners": [
+    {
+      "username":"Some Summoner"
+    },
+    {
+      "username": "Another Summoner"
+    }
+  ]
+}
+```
+
+## wrangler.R Output
+```
+[1] "HTTP Status_Code 200 ; Summoner = some-summoner"
+[1] "HTTP Status_Code 200 ; Matchlist   : "
+[1] "HTTP Status_Code 200 ; Matchlist  100 : 125"
+[1] "Found 838 match(es)"
+[1] "HTTP Status_Code 200 ; Matchlist  0 : 100"
+[1] "HTTP Status_Code 200 ; Matchlist  100 : 200"
+[1] "HTTP Status_Code 200 ; Matchlist  200 : 300"
+[1] "HTTP Status_Code 200 ; Matchlist  300 : 400"
+[1] "HTTP Status_Code 200 ; Matchlist  400 : 500"
+[1] "HTTP Status_Code 200 ; Matchlist  500 : 600"
+[1] "HTTP Status_Code 200 ; Matchlist  600 : 700"
+[1] "HTTP Status_Code 200 ; Matchlist  700 : 800"
+[1] "HTTP Status_Code 200 ; Matchlist  800 : 838"
+[1] "HTTP Status_Code 200 ; Match 1 - 2156013942"
+[1] "HTTP Status_Code 200 ; Match 2 - 2155966676"
+[1] "HTTP Status_Code 200 ; Match 3 - 2155295129"
+[1] "HTTP Status_Code 200 ; Match 4 - 2155281121"
+[1] "HTTP Status_Code 200 ; Match 5 - 2154585294"
+```
+
+
+## Example Cached Match Data
+| platformId | gameId     | champion | queue | season | timestamp     | role  | lane | summoner       | stats       | duration | 
+| ---------- | ---------- | -------- | ----- | ------ | ------------- | ----- | ---- | -------------- | ----------- | -------- |
+| NA1        | 2932305512 | 122      | 400   | 12     | 1544835952093 | SOLO  | TOP  | some-summoner  | JSON String | 1615     |
 
 
 ## Goals
-- [ ] MSSQL database connection
-- [ ] API call to Riot Games API to all data for each user
-- [ ] Cache each users' data in MSSQL
-- [ ] Load user data from MSSQL
-- [ ] Wrangle and clean any bad formatted data
-- [ ] Write cleaned data to Excel and CSV
+- [x] MSSQL database connection
+- [x] API call to Riot Games API to all data for each user
+- [x] Cache all match data for each user in MSSQL
+- [ ] Stored procedure for gathering data
 - [ ] Data visualization
   - [ ] Heatmap over KDA, farm, gold, etc - 2D facet by day of week and user
   - [ ] Histogram of similar stats per user
@@ -29,11 +68,6 @@ Run ```init.R``` to install dependencies
 - [ ] Rmarkdown of graphs with code
 - [ ] Analyze data visualizations and write observations to Rmarkdown
 - [ ] Port Rmarkdown to a Jupyter Notebook
-
-
-## Constants
-* Season 2019 = Season id 13
-* Version 9.6.1
 
 
 ## Sources
