@@ -12,13 +12,13 @@ invisible(lapply(packages, function(p){
 }))
 
 
+#####   START FUNCTIONS   #####
 get_matchlist <- function(url, path, headers, begin, end){
   resp <- GET(url=url, path=path, do.call(add_headers, headers), query=list(beginIndex=begin, endIndex=end))
   Sys.sleep(1.2)
   print(paste("HTTP Status_Code", resp$status_code, "; Matchlist ", begin, ":", end))
   return(resp)
 }
-
 
 get_match <- function(url, path, headers, id, iter){
   resp <- GET(url=base.url, path=paste(path, id, sep=''), do.call(add_headers, headers))
@@ -27,21 +27,82 @@ get_match <- function(url, path, headers, id, iter){
   return(resp)
 }
 
+get_static_json <- function(x){
+  write_json(
+    fromJSON(rawToChar(
+      GET(url="https://ddragon.leagueoflegends.com", 
+          path=paste("cdn", config.data$`version`, "data/en_US", paste(x, ".json", sep=''), sep="/")
+      )$`content`
+    )), 
+    paste("./", x, ".json", sep=''), 
+    pretty=TRUE
+  )
+  return(NULL)
+}
+
+make_dbcon <- function(){
+  db.con <- DBI::dbConnect(
+    odbc::odbc(),
+    # List Drivers    sort(unique(odbcListDrivers()[[1]])) 
+    Driver = "ODBC Driver 13 for SQL Server", 
+    Server = config.data$`db-server`,
+    Database = config.data$`db-name`,
+    UID = config.data$`db-user`,
+    PWD = db.password,
+    Port = config.data$`db-port`
+  )
+  return(db.con)
+}
+#####   END FUNCTIONS   #####
+
 
 time.start <- Sys.time()
-config.path <- file.path(getwd(), "config.json")
 base.url <- "https://na1.api.riotgames.com"
-endpoints <- matrix(c("/lol/summoner/v4/summoners/by-name/", "/lol/match/v4/matchlists/by-account/", "/lol/match/v4/matches/"))
+endpoints <- matrix(c(
+  "/lol/summoner/v4/summoners/by-name/", 
+  "/lol/match/v4/matchlists/by-account/", 
+  "/lol/match/v4/matches/"
+))
 colnames(endpoints) <- c("path")
 rownames(endpoints) <- c("summoner", "matchlist", "match")
 
-config.data <- read_json(path=config.path) 
+config.data <- read_json(path=file.path(getwd(), "config.json")) 
 headers <- list(config.data$`api-key`)
+db.password <- rstudioapi::askForPassword(paste("Password for user[", config.data$`db-user`, "]"))
 names(headers) <- "X-Riot-Token"
 summoners.usernames <- unlist(config.data$summoners, use.names=FALSE)
 m.summoners <- matrix(NA, nrow=length(summoners.usernames), ncol=0)
 m.matchlist <- matrix(NA, 0, 0)
 
+
+##### Initialize Matches Table #####
+db.con <- make_dbcon()
+db.result <- tryCatch(
+  { 
+    dbSendQuery(db.con, paste("CREATE TABLE", config.data$`db-table`, "(
+        __platformId__ NVARCHAR(50) NOT NULL,
+        __gameId__ NVARCHAR(50) NOT NULL,
+        __champion__ NVARCHAR(50) NOT NULL,
+        __queue__ NVARCHAR(50) NOT NULL,
+        __season__ NVARCHAR(50) NOT NULL,
+        __timestamp__ NVARCHAR(50) NOT NULL,
+        __role__ NVARCHAR(50) NOT NULL,
+        __lane__ NVARCHAR(50) NOT NULL,
+        __summoner__ NVARCHAR(50) NOT NULL,
+        __duration__ NVARCHAR(50) NOT NULL,
+        __stats__ NVARCHAR(MAX) NOT NULL
+    )"))
+  }, 
+  error = function(e){
+    print(paste("Error creating", config.data$`db-table`, " - It may already exist."))
+  }
+)
+print(db.result)
+suppressWarnings(DBI::dbDisconnect(db.con))
+
+##### Get static data #####
+get_static_json("champion")
+get_static_json("item")
 
 ##### Build account details matrix #####
 for(i in 1:length(summoners.usernames)){
@@ -68,8 +129,7 @@ for(i in 1:length(summoners.usernames)){
         data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])
         colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "summoner"
       }
-    } 
-    else{
+    } else{
       print(paste("Found", matches.total, "match(es)"))
       data.summoner <- cbind(data.summoner, matches.total)
       colnames(data.summoner)[(length(colnames(data.summoner)))] <- "matches"
@@ -85,17 +145,17 @@ for(i in 1:length(summoners.usernames)){
       match.stats <- toJSON(subset(match$participants, participantId == rownames(
         subset(match$participantId$player, summonerName == summoners.usernames[i])))
       )
+      if("duration" %in% colnames(data.matchlist)){
+        data.matchlist[m,"duration"] <- as.character(match$gameDuration)
+      } else{
+        data.matchlist <- cbind(data.matchlist, as.character(match$gameDuration))
+        colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "duration"
+      }
       if("stats" %in% colnames(data.matchlist)){
         data.matchlist[m,"stats"] <- match.stats 
       } else{
         data.matchlist <- cbind(data.matchlist, match.stats)
         colnames(data.matchlist)[(length(colnames(data.matchlist)))]  <- "stats"
-      }
-      if("duration" %in% colnames(data.matchlist)){
-        data.matchlist[m,"duration"] <- match$gameDuration
-      } else{
-        data.matchlist <- cbind(data.matchlist, match$gameDuration)
-        colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "duration"
       }
     }
     m.matchlist <- if(length(colnames(m.matchlist)) == 0) data.matchlist else rbind(m.matchlist, as.vector(data.matchlist))
@@ -105,9 +165,29 @@ for(i in 1:length(summoners.usernames)){
 }
 
 m.matchlist <- as.data.frame(m.matchlist)
-write.csv(apply(m.matchlist, 2, as.character), file="./Matches.csv", row.names=FALSE)
+write.csv2(apply(m.matchlist, 2, as.character), file=as.character(config.data$`csv-data`), row.names=FALSE, eol="\n", na="NA")
+
+db.con <- make_dbcon()
+db.result <- tryCatch(
+  {
+    dbSendQuery(db.con, paste("BULK INSERT ", config.data$`db-table`, 
+      " FROM '", config.data$`csv-data`, "' WITH (
+          FIRSTROW=2,
+          FIELDTERMINATOR=';',
+          ROWTERMINATOR = '\n',
+          TABLOCK
+      )", sep=''
+    ))
+  }, 
+  error = function(e){
+    print(paste("Error adding data to", 
+      config.data$`db-table`, " - Try manually importing Matches.csv to MSSQL")
+    )
+  }
+)
+suppressWarnings(DBI::dbDisconnect(db.con))
 
 print("Execution Time:")
 print(Sys.time() - time.start)
-
-
+#rm(list=ls(all=TRUE))
+print("Data gathering completed")

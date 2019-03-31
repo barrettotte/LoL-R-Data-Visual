@@ -6,8 +6,8 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 
 ## Process
 * Create ```config.json``` to define Riot API key and specify summoners to gather data for
-* Run ```wrangler.R``` to gather all data and output to ```./Matches.csv```
-* Open SSMS > Database > Tasks > Import Flat File (Matches.csv) > Create new table ```dbo.Matches```
+* Run ```wrangler.R``` to gather all data, output to ```./Matches.csv```, and populate ```[database].[dbo].[tablename]```
+* Additional runs of either ```wrangler.R``` or ```append-matches.R``` will append data to ```[database].[dbo].[tablename]```
 
 
 ## Config
@@ -49,9 +49,9 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 
 
 ## Example Cached Match Data
-| platformId | gameId     | champion | queue | season | timestamp     | role  | lane | summoner       | stats       | duration | 
-| ---------- | ---------- | -------- | ----- | ------ | ------------- | ----- | ---- | -------------- | ----------- | -------- |
-| NA1        | 2932305512 | 122      | 400   | 12     | 1544835952093 | SOLO  | TOP  | some-summoner  | JSON String | 1615     |
+| platformId | gameId       | champion | queue | season | timestamp       | role   | lane  | summoner        | duration | stats       | 
+| ---------- | ------------ | -------- | ----- | ------ | --------------- | ------ | ----- | --------------- | -------- | ----------- |
+| "NA1"      | "2932305512" | "122"    | "400" | "12"   | "1544835952093" | "SOLO" | "TOP" | "some-summoner" |  "1615"  | JSON String |
 
 
 ## Goals
