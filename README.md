@@ -58,7 +58,7 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 - [x] MSSQL database connection
 - [x] API call to Riot Games API to all data for each user
 - [x] Cache all match data for each user in MSSQL
-- [ ] Stored procedure for gathering data
+- [x] Load and clean slightly dirty data from MSSQL
 - [ ] Data visualization
   - [ ] Heatmap over KDA, farm, gold, etc - 2D facet by day of week and user
   - [ ] Histogram of similar stats per user

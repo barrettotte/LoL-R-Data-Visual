@@ -68,10 +68,10 @@ rownames(endpoints) <- c("summoner", "matchlist", "match")
 
 config.data <- read_json(path=file.path(getwd(), "config.json")) 
 headers <- list(config.data$`api-key`)
-db.password <- rstudioapi::askForPassword(paste("Password for user[", config.data$`db-user`, "]"))
+#db.password <- rstudioapi::askForPassword(paste("Password for user[", config.data$`db-user`, "]"))
+db.password <- "password"
 names(headers) <- "X-Riot-Token"
 summoners.usernames <- unlist(config.data$summoners, use.names=FALSE)
-m.summoners <- matrix(NA, nrow=length(summoners.usernames), ncol=0)
 m.matchlist <- matrix(NA, 0, 0)
 
 
@@ -106,6 +106,7 @@ get_static_json("item")
 
 ##### Build account details matrix #####
 for(i in 1:length(summoners.usernames)){
+  data.matchlist <- matrix()
   s <- gsub(" ", "", summoners.usernames[i])
   resp <- GET(url=base.url, path=paste(endpoints["summoner",], s, sep=''), do.call(add_headers, headers))
   Sys.sleep(1.2)
@@ -121,45 +122,58 @@ for(i in 1:length(summoners.usernames)){
       resp <- get_matchlist(base.url, matchlist.url, headers, 100, 125)
       matches.total <- head(content(resp))$`totalGames`
       print(paste("Found", matches.total, "match(es)"))
-      data.summoner <- cbind(data.summoner, matches.total)
-      colnames(data.summoner)[(length(colnames(data.summoner)))] <- "matches"
       
       for(j in 0:(((matches.total - matches.total %% 100)/100)-1)){
         resp <- get_matchlist(base.url, matchlist.url, headers, j*100, (j+1)*100)
-        data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])
-        colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "summoner"
+        if(length(colnames(data.matchlist)) == 0){
+          data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])  
+        } else{
+          data.matchlist <- rbind(data.matchlist, cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"]))
+        }
       }
+      colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "summoner"
     } else{
       print(paste("Found", matches.total, "match(es)"))
       data.summoner <- cbind(data.summoner, matches.total)
       colnames(data.summoner)[(length(colnames(data.summoner)))] <- "matches"
     }
     resp <- get_matchlist(base.url, matchlist.url, headers, matches.total - matches.total %% 100, matches.total)
-    
-    data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])
+    if(length(colnames(data.matchlist)) == 0){
+      data.matchlist <- cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"])  
+    } else{
+      data.matchlist <- rbind(data.matchlist, cbind(do.call(rbind, content(resp)$matches), data.summoner[,"name"]))
+    }
     colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "summoner"
     
     for(m in 1:matches.total){
       resp <- get_match(base.url, endpoints["match",], headers, unlist(data.matchlist[,"gameId"][m], use.names=FALSE), m)
-      match <- fromJSON(rawToChar(resp$content))
-      match.stats <- toJSON(subset(match$participants, participantId == rownames(
-        subset(match$participantId$player, summonerName == summoners.usernames[i])))
-      )
-      if("duration" %in% colnames(data.matchlist)){
-        data.matchlist[m,"duration"] <- as.character(match$gameDuration)
+      if(resp$status_code == 503){
+        m <- m-1
       } else{
-        data.matchlist <- cbind(data.matchlist, as.character(match$gameDuration))
-        colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "duration"
-      }
-      if("stats" %in% colnames(data.matchlist)){
-        data.matchlist[m,"stats"] <- match.stats 
-      } else{
-        data.matchlist <- cbind(data.matchlist, match.stats)
-        colnames(data.matchlist)[(length(colnames(data.matchlist)))]  <- "stats"
+        match <- fromJSON(rawToChar(resp$content))
+        match.stats <- toJSON(subset(match$participants, participantId == rownames(
+          subset(match$participantId$player, summonerName == summoners.usernames[i])))
+        )
+        if("duration" %in% colnames(data.matchlist)){
+          data.matchlist[m,"duration"] <- as.character(match$gameDuration)
+        } else{
+          
+          data.matchlist <- cbind(data.matchlist, as.character(match$gameDuration))
+          colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "duration"
+        }
+        if("stats" %in% colnames(data.matchlist)){
+          data.matchlist[m,"stats"] <- match.stats 
+        } else{
+          data.matchlist <- cbind(data.matchlist, match.stats)
+          colnames(data.matchlist)[(length(colnames(data.matchlist)))]  <- "stats"
+        } 
       }
     }
-    m.matchlist <- if(length(colnames(m.matchlist)) == 0) data.matchlist else rbind(m.matchlist, as.vector(data.matchlist))
-    m.summoners <- if(length(colnames(m.summoners)) == 0) data.summoner else rbind(m.summoners, as.vector(data.summoner))
+    if(length(colnames(m.matchlist)) == 0){
+      m.matchlist <- data.matchlist
+    } else {
+      m.matchlist <- rbind(m.matchlist, data.matchlist)
+    }
   }
   cat("\n")
 }
@@ -189,5 +203,5 @@ suppressWarnings(DBI::dbDisconnect(db.con))
 
 print("Execution Time:")
 print(Sys.time() - time.start)
-#rm(list=ls(all=TRUE))
 print("Data gathering completed")
+#rm(list=ls(all=TRUE))
