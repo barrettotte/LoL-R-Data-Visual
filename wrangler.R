@@ -68,8 +68,7 @@ rownames(endpoints) <- c("summoner", "matchlist", "match")
 
 config.data <- read_json(path=file.path(getwd(), "config.json")) 
 headers <- list(config.data$`api-key`)
-#db.password <- rstudioapi::askForPassword(paste("Password for user[", config.data$`db-user`, "]"))
-db.password <- "password"
+db.password <- rstudioapi::askForPassword(paste("Password for user[", config.data$`db-user`, "]"))
 names(headers) <- "X-Riot-Token"
 summoners.usernames <- unlist(config.data$summoners, use.names=FALSE)
 m.matchlist <- matrix(NA, 0, 0)
@@ -89,6 +88,7 @@ db.result <- tryCatch(
         __role__ NVARCHAR(50) NOT NULL,
         __lane__ NVARCHAR(50) NOT NULL,
         __summoner__ NVARCHAR(50) NOT NULL,
+        __accountId__ NVARCHAR(100) NOT NULL,
         __duration__ NVARCHAR(50) NOT NULL,
         __stats__ NVARCHAR(MAX) NOT NULL
     )"))
@@ -152,12 +152,18 @@ for(i in 1:length(summoners.usernames)){
       } else{
         match <- fromJSON(rawToChar(resp$content))
         match.stats <- toJSON(subset(match$participants, participantId == rownames(
-          subset(match$participantId$player, summonerName == summoners.usernames[i])))
+          subset(match$participantId$player, accountId == data.accountId)))
         )
+        # This is ugly duplicated code...please look away. I am lazy
+        if("accountId" %in% colnames(data.matchlist)){
+          data.matchlist[m, "accountId"] <- data.accountId
+        } else{
+          data.matchlist <- cbind(data.matchlist, as.character(data.accountId))
+          colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "accountId"
+        }
         if("duration" %in% colnames(data.matchlist)){
           data.matchlist[m,"duration"] <- as.character(match$gameDuration)
         } else{
-          
           data.matchlist <- cbind(data.matchlist, as.character(match$gameDuration))
           colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "duration"
         }

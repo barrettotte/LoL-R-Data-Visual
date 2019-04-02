@@ -13,7 +13,14 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 ## Config
 ```JSON
 {
+  "db-server": "SERVER_NAME",
+  "db-name": "DB_NAME",
+  "db-port": 1433,
+  "db-user": "user",
+  "db-table": "[DB_NAME].[dbo].[Matches]",
   "api-key": "RIOT_API",
+  "csv-data": "D:/some/where",
+  "version": "9.6.1",
   "summoners": [
     {
       "username":"Some Summoner"
@@ -49,9 +56,9 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 
 
 ## Example Cached Match Data
-| platformId | gameId       | champion | queue | season | timestamp       | role   | lane  | summoner        | duration | stats       | 
-| ---------- | ------------ | -------- | ----- | ------ | --------------- | ------ | ----- | --------------- | -------- | ----------- |
-| "NA1"      | "2932305512" | "122"    | "400" | "12"   | "1544835952093" | "SOLO" | "TOP" | "some-summoner" |  "1615"  | JSON String |
+| platformId | gameId       | champion | queue | season | timestamp       | role   | lane  | summoner        | accountId    | duration | stats       | 
+| ---------- | ------------ | -------- | ----- | ------ | --------------- | ------ | ----- | --------------- | ------------ | -------- | ----------- |
+| "NA1"      | "2932305512" | "122"    | "400" | "12"   | "1544835952093" | "SOLO" | "TOP" | "some-summoner" | "1234567890" | "1615"   | JSON String |
 
 
 ## Goals

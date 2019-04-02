@@ -19,7 +19,7 @@ get_matches <- function(summoner.name){
       summoner.matches <- (dbGetQuery(db.con, paste("
         SELECT DISTINCT 
           __gameId__, __champion__, __season__, __timestamp__, __role__, 
-          __lane__, __summoner__, __duration__, __stats__
+          __lane__, __summoner__, __accountId__, __duration__, __stats__
         FROM ", config.data$`db-table`, "WHERE __summoner__='\"", summoner.name, "\"'", sep='')
       ))
     }, 
@@ -64,7 +64,7 @@ summoners.usernames <- unlist(config.data$`summoners`, use.names=FALSE)
 m.matchlist <- matrix(NA, 0, 0)
 
 
-m.matchlist <- get_matches(summoners.usernames[2])
+m.matchlist <- get_matches(summoners.usernames[1])
 
 #head(m.matchlist,1)
 #is.data.frame(fromJSON(head(m.matchlist$stats,1)))
@@ -75,7 +75,7 @@ m.matchlist <- get_matches(summoners.usernames[2])
 ggplot(m.matchlist, aes(x=lane)) +
   geom_bar(aes(fill=role)) +
   xlab("Lane") + ylab("Matches Played") +
-  ggtitle(paste(summoners.usernames[2], " (", nrow(m.matchlist), " Matches Total)", sep=''))
+  ggtitle(paste(summoners.usernames[1], " (", nrow(m.matchlist), " Matches Total)", sep=''))
   
   
 
