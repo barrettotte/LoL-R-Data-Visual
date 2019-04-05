@@ -89,6 +89,7 @@ db.result <- tryCatch(
         __lane__ NVARCHAR(50) NOT NULL,
         __summoner__ NVARCHAR(50) NOT NULL,
         __accountId__ NVARCHAR(100) NOT NULL,
+        __gameMode__ NVARCHAR(50) NOT NULL,
         __duration__ NVARCHAR(50) NOT NULL,
         __stats__ NVARCHAR(MAX) NOT NULL
     )"))
@@ -160,6 +161,12 @@ for(i in 1:length(summoners.usernames)){
         } else{
           data.matchlist <- cbind(data.matchlist, as.character(data.accountId))
           colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "accountId"
+        }
+        if("gameMode" %in% colnames(data.matchlist)){
+          data.matchlist[m,"gameMode"] <- as.character(match$gameMode)
+        } else{
+          data.matchlist <- cbind(data.matchlist, as.character(match$gameMode))
+          colnames(data.matchlist)[(length(colnames(data.matchlist)))] <- "gameMode"
         }
         if("duration" %in% colnames(data.matchlist)){
           data.matchlist[m,"duration"] <- as.character(match$gameDuration)

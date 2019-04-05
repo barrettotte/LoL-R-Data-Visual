@@ -20,6 +20,7 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
   "db-table": "[DB_NAME].[dbo].[Matches]",
   "api-key": "RIOT_API",
   "csv-data": "D:/some/where",
+  "graphs-output": "D:/graphs",
   "version": "9.6.1",
   "summoners": [
     {
@@ -56,25 +57,9 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
 
 
 ## Example Cached Match Data
-| platformId | gameId       | champion | queue | season | timestamp       | role   | lane  | summoner        | accountId    | duration | stats       | 
-| ---------- | ------------ | -------- | ----- | ------ | --------------- | ------ | ----- | --------------- | ------------ | -------- | ----------- |
-| "NA1"      | "2932305512" | "122"    | "400" | "12"   | "1544835952093" | "SOLO" | "TOP" | "some-summoner" | "1234567890" | "1615"   | JSON String |
-
-
-## Goals
-- [x] MSSQL database connection
-- [x] API call to Riot Games API to all data for each user
-- [x] Cache all match data for each user in MSSQL
-- [x] Load and clean slightly dirty data from MSSQL
-- [ ] Data visualization
-  - [ ] Heatmap over KDA, farm, gold, etc - 2D facet by day of week and user
-  - [ ] Histogram of similar stats per user
-  - [ ] Overall stat averages compared between users
-  - [ ] TBD
-- [ ] Export all graphs
-- [ ] Rmarkdown of graphs with code
-- [ ] Analyze data visualizations and write observations to Rmarkdown
-- [ ] Port Rmarkdown to a Jupyter Notebook
+| gameId       | champion | season | timestamp       | role   | lane  | summoner        | accountId    | gameMode  | duration | stats       | 
+| ------------ | -------- | ------ | --------------- | ------ | ----- | --------------- | ------------ | --------- | -------- | ----------- |
+| "2932305512" | "122"    | "12"   | "1544835952093" | "SOLO" | "TOP" | "some-summoner" | "1234567890" | "CLASSIC" | "1615"   | JSON String |
 
 
 ## Sources
