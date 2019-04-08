@@ -7,12 +7,11 @@ I also added an additional constraint to this side project, try to do the bulk o
 
 
 ## KDA vs Gold Graph (A friend's account)
-[graph_kda_gold]()
+[![graph_kda_gold](https://raw.githubusercontent.com/barrettotte/LoL-R-Data-Visual/master/graphs/Digital/graph_kda_gold.png)](https://raw.githubusercontent.com/barrettotte/LoL-R-Data-Visual/master/graphs/Digital/graph_kda_gold.png)
 
 
 ## Win Rate on Day of Week (A friend's account)
-[graph_winrate_dow]()
-
+[![graph_winrate_dow](https://raw.githubusercontent.com/barrettotte/LoL-R-Data-Visual/master/graphs/Mivaro/graph_winrate_dow.png)](https://raw.githubusercontent.com/barrettotte/LoL-R-Data-Visual/master/graphs/Mivaro/graph_winrate_dow.png)
 
 
 ## Config
