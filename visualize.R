@@ -3,7 +3,7 @@
 
 ##### Install and activate packages #####
 packages <- c("dplyr", "DBI", "odbc", "jsonlite", "plyr", "data.table", 
-  "ggplot2", "hexbin"
+  "ggplot2", "hexbin", "plotly"
 )
 if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
   install.packages(setdiff(packages, rownames(installed.packages())))
@@ -13,9 +13,11 @@ invisible(lapply(packages, function(p){
 }))
 
 
+options(scipen=999) # turn off scientific notation like 1e+06
+options(digits=5)
+
 
 #####   START FUNCTIONS   #####
-
 get_matches <- function(account.id, game.mode){
   print("Getting matches...")
   tryCatch(
@@ -92,25 +94,52 @@ get_stats <- function(matches){
 
 graph_kda_gold <- function(username, stats, output){
   print("Generating graph_kda_gold...")
-  gg <- ggplot(stats, 
-    aes(x=as.double(kda), y=as.numeric(goldEarned), color=win)
-  ) + 
-  geom_point(size=4, alpha=0.35) +
-  labs(title=paste(username, "KDA vs Gold -", nrow(stats), "Match(es)"), x="KDA", y="Gold") +
-  scale_color_manual(values=c("red", "green"), name="Match Result", labels=c("Loss", "Win")) + 
-  scale_x_continuous(labels = scales::number_format(scale=0.01, accuracy = 0.01))
+  gg <- ggplot(stats, aes(x=as.double(as.character(kda)), y=as.numeric(as.character(goldEarned)), color=win)) + 
+    geom_point(size=1, alpha=0.35) +
+    labs(title=paste(username, "KDA vs Gold -", nrow(stats), "Matches"), x="KDA", y="Gold") +
+    scale_color_manual(values=c("red", "green"), name="Match Result", labels=c("Loss", "Win")) + 
+    scale_x_continuous(labels=function(x){ sprintf("%.2f", x) })
   
-  suppressWarnings((dir.create(paste(output, username, sep=''))))
+  suppressWarnings(dir.create(paste(output, username, sep='')))
   ggsave(
     filename=paste(output, username, "/graph_kda_gold", ".png", sep=""), 
     width=20, height=20, units="cm"
   )
+  return(gg)
+}
+
+fmt_dcimals <- function(decimals=0){
+  function(x) as.character(round(x,decimals))
 }
 
 graph_winrate_dayOfWeek <- function(username, stats, output){
+  print("Generating graph_winrate_dow...")
+  stats.dow <- matrix(NA, 0, 3)
+  colnames(stats.dow) <- c("rate", "matches", "day")
+  avg_win <- mean(as.numeric(as.character(stats$win)), na.rm = TRUE)
   
+  for(d in levels(stats$dayOfWeek)){
+    m <- stats[stats[, "dayOfWeek"] == d,]  
+    stats.dow <- rbind(stats.dow, c(mean(as.numeric(as.character(m$win)), na.rm = TRUE), nrow(m), d) )
+  }
+  gg <- ggplot(as.data.frame(stats.dow), aes(x=day, y=as.double(as.character((rate))))) + 
+    geom_bar(stat="identity", fill="steelblue") + 
+    geom_text(aes(label=sprintf("%.2f%%", as.double(as.character(rate))*100)), vjust=3, color="white") +
+    labs(
+      title=paste(username, "Win Rate on Day of Week\n  ", nrow(stats), "Matches", ",", 
+        (sprintf("%.2f%%", avg_win*100)), "Overall Win Rate"),
+      x="Day Of Week", 
+      y="Win Rate"
+    ) +
+    scale_y_continuous(labels=fmt_dcimals(2), limits=c(0.00, 1.00))
+  
+  suppressWarnings(dir.create(paste(output, username, sep='')))
+  ggsave(
+    filename=paste(output, username, "/graph_winrate_dow", ".png", sep=""), 
+    width=20, height=20, units="cm"
+  )
+  return(gg)
 }
-
 #####   END FUNCTIONS   #####
 
 
@@ -134,6 +163,8 @@ tryCatch({
 colnames(summoners) <- c("name", "accountId")
 
 out <- config.data$`graphs-output`
+
+
 ##### Generate Graphs #####
 for(i in 1:nrow(summoners)){
   name <- gsub("\"", "", summoners[i, "name"])
@@ -141,9 +172,8 @@ for(i in 1:nrow(summoners)){
   matches <- get_matches(gsub("\"", "", summoners[i, "accountId"]), "CLASSIC")
   stats <- get_stats(matches)
   
-#  graph_kda_gold(name, stats, out)
-#  avg_win <- mean(as.numeric(as.character(stats$win)), na.rm = TRUE)
-#  print(paste("Average:",avg_win))
+  graph_kda_gold(name, stats, out)
+  graph_winrate_dayOfWeek(name, stats, out)
 }
 
 suppressWarnings(DBI::dbDisconnect(db.con))

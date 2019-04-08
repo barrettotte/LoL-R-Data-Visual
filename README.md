@@ -1,13 +1,18 @@
 # LoL-R-Data-Visual
 
 
-Use the Riot Games API to visualize League of Legends user's stats; An introduction to data visualization and R
+Use the Riot Games API to visualize League of Legends user's stats; An introduction to data visualization and R.
+
+I also added an additional constraint to this side project, try to do the bulk of everything in R (wrangling, cleaning, filtering)
 
 
-## Process
-* Create ```config.json``` to define Riot API key and specify summoners to gather data for
-* Run ```wrangler.R``` to gather all data, output to ```./Matches.csv```, and populate ```[database].[dbo].[tablename]```
-* Additional runs of either ```wrangler.R``` or ```append-matches.R``` will append data to ```[database].[dbo].[tablename]```
+## KDA vs Gold Graph (A friend's account)
+[graph_kda_gold]()
+
+
+## Win Rate on Day of Week (A friend's account)
+[graph_winrate_dow]()
+
 
 
 ## Config
@@ -21,7 +26,6 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
   "api-key": "RIOT_API",
   "csv-data": "D:/some/where",
   "graphs-output": "D:/graphs",
-  "version": "9.6.1",
   "summoners": [
     {
       "username":"Some Summoner"
@@ -32,6 +36,14 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
   ]
 }
 ```
+
+
+## Process
+* Create ```config.json``` to define Riot API key and specify summoners to gather data for
+* Run ```wrangler.R``` to gather all data, output to ```./Matches.csv```, and populate ```[database].[dbo].[tablename]```
+* Additional runs of either ```wrangler.R``` or ```append-matches.R``` will append data to ```[database].[dbo].[tablename]```
+* Generate visualizations with ```visualize.R```
+
 
 ## wrangler.R Output
 ```
@@ -71,3 +83,4 @@ Use the Riot Games API to visualize League of Legends user's stats; An introduct
   * https://developer.riotgames.com/
   * Items https://ddragon.leagueoflegends.com/cdn/9.6.1/data/en_US/item.json
   * Champions https://ddragon.leagueoflegends.com/cdn/9.6.1/data/en_US/champion.json
+
